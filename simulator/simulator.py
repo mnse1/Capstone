@@ -23,3 +23,4 @@ if __name__ == "__main__":
 
     results = run_simulation(pitcher, batter, num_at_bats=10000)
     print("시뮬레이션 결과:", results)
+
