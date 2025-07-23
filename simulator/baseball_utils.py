@@ -1,5 +1,4 @@
 import pandas as pd
-import os
 
 def load_pitcher_data(filepath, sheet_name='투수보정'):
     df = pd.read_excel(filepath, sheet_name=sheet_name)
