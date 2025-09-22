@@ -194,7 +194,7 @@ def optimize_realistic_weights(df):
     
     print(f"   타겟 지표: {target_name}")
     
-    # FIP 중심의 현실적 범위에서 테스트 (60% ~ 80%)
+    # FIP 중심의 테스트
     best_r2 = -1
     best_weights = (0.7, 0.3)
     
