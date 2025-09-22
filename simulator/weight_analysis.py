@@ -164,8 +164,7 @@ def analyze_weight_vs_winning(merged_df):
     print(f"   최고 상관계수: {best_correlation:.4f}")
     
     # 기존 방식과 비교
-    original_score = (0.7 * (100 / merged_df['보정FIP']) + 
-                     0.3 * (100 / merged_df['보정피안타']))
+    original_score = (0.7 * (100 / merged_df['보정FIP']) + 0.3 * (100 / merged_df['보정피안타']))
     original_corr = original_score.corr(target)
     
     print(f"   기존 7:3 방식: {original_corr:.4f}")
