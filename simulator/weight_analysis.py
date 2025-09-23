@@ -71,13 +71,13 @@ def correct_weight_analysis():
         
         # 결론
         if avg_hits > 0.5:
-            print(f"\n결론: 피안타 중심 평가가 더 효과적!")
+            print(f"\n결론: 피안타 중심 평가가 더 효과적")
             print(f"   전통적 FIP 중심(70%) → 데이터 기반 피안타 중심({avg_hits:.0%})")
         elif abs(avg_fip - 0.5) < 0.1:
-            print(f"\n결론: FIP와 피안타의 균형잡힌 조합이 최적!")
+            print(f"\n결론: FIP와 피안타의 균형잡힌 조합이 최적")
             print(f"   50:50 균형 방식 권장")
         else:
-            print(f"\n결론: FIP 중심이지만 기존보다 피안타 비중 증가!")
+            print(f"\n결론: FIP 중심이지만 기존보다 피안타 비중 증가")
     
     return results
 
