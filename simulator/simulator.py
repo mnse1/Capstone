@@ -9,9 +9,14 @@ def normalize_100(value, low=50, high=150):
         return 0.5
     return float(np.clip((value - low) / (high - low), 0.0, 1.0))
 
+def get_average_hit_rate():
+    file_path = '졸프용 데이터베이스.xlsx'
+    df = pd.read_excel(file_path, sheet_name='연도별 성적')
+    average_value = df['피안타율'].mean()
+    return average_value
+
 class SimulationConfig:
-    # KBO 최근 5년 평균 타율을 기준으로 한 기본 안타 확률
-    BASE_HIT_RATE = 0.275
+    BASE_HIT_RATE = round(get_average_hit_rate(), 3)
     
     # 타자 OPS가 안타 확률에 미치는 영향 계수 (기존 0.25 -> 0.15로 완화)
     # OPS 0.1 상승 시, 안타 확률 0.015 상승
