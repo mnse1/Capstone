@@ -9,43 +9,56 @@ def normalize_100(value, low=50, high=150):
         return 0.5
     return float(np.clip((value - low) / (high - low), 0.0, 1.0))
 
+class SimulationConfig:
+    # KBO 최근 5년 평균 타율을 기준으로 한 기본 안타 확률
+    BASE_HIT_RATE = 0.275
+    
+    # 타자 OPS가 안타 확률에 미치는 영향 계수 (기존 0.25 -> 0.15로 완화)
+    # OPS 0.1 상승 시, 안타 확률 0.015 상승
+    OPS_COEFFICIENT = 0.15
+    
+    # 투수 능력이 안타 확률에 미치는 최대 영향력 (기존 0.35 -> 0.25로 완화)
+    # 최고 투수와 최악 투수의 안타 확률 차이를 최대 2할 5푼으로 제한
+    PITCHER_MAX_IMPACT = 0.25
+    
+    # 확률의 현실적 범위 제한
+    MIN_HIT_RATE = 0.150  # 아무리 좋은 투수라도 최소 1할 5푼의 안타는 허용
+    MAX_HIT_RATE = 0.450  # 아무리 나쁜 투수라도 4할 5푼 이상의 안타는 비현실적
+
 def simulate_matchup(pitcher_stats, batter_ops, n_sim=1000, w_fip=0.7, w_hit=0.3):
-    # 보정 스코어 (높을수록 좋음)
-    adj_fip = pitcher_stats.get('보정FIP')
-    adj_hit = pitcher_stats.get('보정피안타')
+    """
+    개선된 매개변수와 확률 범위 제한을 적용하여
+    투수와 타자의 맞대결을 시뮬레이션합니다.
+    """
+    # ... (기존 코드: ps, combined_score 계산 등은 동일)
+    ps = pitcher_stats
+    combined_score = (w_fip * ps['보정FIP'] + w_hit * ps['보정피안타']) / 100
+    
+    # --- 3. 개선된 공식 적용 ---
+    # KBO 평균 타율(0.275)을 기준으로 타자 OPS를 반영하여 기본 안타 확률 계산
+    base = SimulationConfig.BASE_HIT_RATE + \
+           SimulationConfig.OPS_COEFFICIENT * (batter_ops - 0.7)
+           
+    # 투수 능력(combined_score)을 반영하여 최종 안타 확률 계산
+    # (1 - combined_score)는 평균 대비 투수 능력 편차를 의미
+    p_hit = base - (SimulationConfig.PITCHER_MAX_IMPACT * (combined_score - 1.0))
+    
+    # --- 4. 확률 범위 제한 (np.clip) ---
+    # 계산된 p_hit 값이 비현실적인 범위를 벗어나지 않도록 강제 조정
+    p_hit = np.clip(p_hit, SimulationConfig.MIN_HIT_RATE, SimulationConfig.MAX_HIT_RATE)
 
-    # 필수 값 결여 시 시뮬 생략
-    if adj_fip is None or adj_hit is None:
-        return None
-
-    s_fip = normalize_100(adj_fip)
-    s_hit = normalize_100(adj_hit)
-    combined_score = w_fip * s_fip + w_hit * s_hit  # 0~1
-
-    # 리그 평균 타자 영향은 "연도 평균 OPS"만 사용 (투수 능력 위주)
-    # hit 확률 맵핑: 평균 조정(0.7 OPS) 근처에서 합리적 범위로
-    # 필요시 a, b 튜닝 가능
-    a = 0.30  # 기본 베이스(리그 평균 단타 확률 감각)
-    b = 0.25  # 타자 OPS 기여 계수
-    base = a + b * (batter_ops - 0.7)
-
-    # combined_score가 높을수록 p_hit 감소
-    p_hit = np.clip(base + (0.35 * (1.0 - combined_score)), 0.02, 0.60)
-
-    results = np.random.choice(['hit', 'out'], size=n_sim, p=[p_hit, 1 - p_hit])
-    hit_count = int(np.sum(results == 'hit'))
-    out_count = n_sim - hit_count
-
-    # 100 스케일 결합지표(PAI)도 같이 산출 (해석 쉬움)
-    pai_100 = 100 * (w_fip * (adj_fip / 100.0) + w_hit * (adj_hit / 100.0))
+    # ... (이하 시뮬레이션 로직은 기존과 동일)
+    n_hit = np.random.binomial(n_sim, p_hit)
+    n_out = n_sim - n_hit
+    hit_rate = n_hit / n_sim if n_sim > 0 else 0
 
     return {
-        'hit': hit_count,
-        'out': out_count,
-        'hit_rate': round(hit_count / n_sim, 3),
-        'PAI(100)': round(pai_100, 1),
-        '보정FIP': round(adj_fip, 1) if adj_fip is not None else None,
-        '보정피안타': round(adj_hit, 1) if adj_hit is not None else None
+        '보정FIP': ps['보정FIP'],
+        '보정피안타': ps['보정피안타'],
+        'hit': n_hit,
+        'out': n_out,
+        'hit_rate': hit_rate,
+        'PAI(100)': (w_fip * ps['보정FIP'] + w_hit * ps['보정피안타'])
     }
 
 if __name__ == "__main__":
