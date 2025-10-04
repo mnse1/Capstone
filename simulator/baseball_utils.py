@@ -1,7 +1,11 @@
 import pandas as pd
 
 def load_pitcher_data(filepath, sheet_name='투수보정'):
-    return pd.read_excel(filepath, sheet_name=sheet_name)
+    df = pd.read_excel(filepath, sheet_name=sheet_name)
+    zero_era_indices = df[df['ERA'] == 0].index
+    if not zero_era_indices.empty:
+        df.loc[zero_era_indices, 'ERA*'] = 100
+    return df
 
 def _safe_mean(series):
     s = pd.to_numeric(series, errors='coerce')
