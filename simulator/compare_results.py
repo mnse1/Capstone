@@ -61,7 +61,7 @@ def analyze_statistics(df, weights_label):
 def analyze_correlation_with_era(df, weights_label):
     """실제 성과(ERA*)와의 상관관계를 분석하여 모델의 예측력을 검증합니다."""
     print("\n" + "="*70)
-    print("2. 실제 성과(ERA*)와의 예측력 검증 (핵심)")
+    print("2. 실제 성과(ERA*)와의 예측력 검증")
     print("="*70)
     
     # ERA*가 0 이하인 비현실적인 데이터 제외
