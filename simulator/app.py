@@ -34,12 +34,12 @@ def load_data():
         # 필요한 컬럼만 선택하고 순서 지정
         cols_to_keep = [
             '연도', '투수명', 'PAI', 'ERA*', 'PAI_orig', 'FIP*_orig',
-            'K/9_orig', 'BB/9_orig', 'HR/9_orig', '피OPS_orig'
+            'K/9_orig', 'BB/9_orig', 'HR/9_orig'
         ]
         # 일부 컬럼 이름 변경
         merged_df = merged_df[cols_to_keep].rename(columns={
             'FIP*_orig': 'FIP*', 'K/9_orig': 'K/9', 'BB/9_orig': 'BB/9',
-            'HR/9_orig': 'HR/9', '피OPS_orig': '피OPS'
+            'HR/9_orig': 'HR/9'
         })
         
         # 팀 정보 추가
@@ -117,7 +117,7 @@ elif page == "PAI 랭킹 대시보드":
         st.dataframe(filtered_df.sort_values(by="PAI", ascending=False).reset_index(drop=True).style.format({
             'PAI': '{:.2f}',
             'ERA*': '{:.2f}',
-            'PAI_orig': '{:.2f}',
+            # 'PAI_orig': '{:.2f}',
             'FIP*': '{:.2f}',
             'K/9': '{:.2f}',
             'BB/9': '{:.2f}',

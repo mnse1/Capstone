@@ -4,7 +4,7 @@ from sklearn.linear_model import LinearRegression
 
 def analyze_team_performance_lr(pitcher_df):
     """
-    방법 1-LR: 선형 회귀를 이용해 팀 승률과 가장 관계가 깊은 가중치를 분석합니다.
+    방법 1-LR: 선형 회귀를 이용해 팀 승률과 가장 관계가 깊은 가중치 분석
     """
     print("\n" + "="*70)
     print("방법 1: 팀 승률 기반 가중치 분석 (Linear Regression)")
@@ -54,8 +54,7 @@ def analyze_team_performance_lr(pitcher_df):
 
 def analyze_individual_performance_lr(pitcher_df):
     """
-    방법 2-LR (기존 방법 3): 선형 회귀를 이용해 개별 투수 성과(ERA*)를 
-    가장 잘 설명하는 가중치를 분석합니다.
+    방법 2-LR : 선형 회귀를 이용해 개별 투수 성과(ERA*)를 가장 잘 설명하는 가중치 분석
     """
     print("\n" + "="*70)
     print("방법 2: 개별 성과 기반 가중치 분석 (Linear Regression)")

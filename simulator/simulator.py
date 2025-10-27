@@ -89,7 +89,7 @@ if __name__ == "__main__":
             '투수명': name, '연도': year,
             'K/9': ps.get('K/9'), 'BB/9': ps.get('BB/9'), 'HR/9': ps.get('HR/9'),
             'FIP*': ps.get('FIP*'), 'ERA*': ps.get('ERA*'), 'RA9*': ps.get('RA9*'),
-            '피OPS': ps.get('피OPS'), '타자OPS(연도평균)': round(batter_ops, 3) if batter_ops else None,
+            # '피OPS': ps.get('피OPS'), '타자OPS(연도평균)': round(batter_ops, 3) if batter_ops else None,
             '보정FIP': sim['보정FIP'], '보정피안타': sim['보정피안타'],
             'PAI(100)': sim['PAI(100)'],
             '시뮬_안타': sim['hit'], '시뮬_아웃': sim['out'], '시뮬_피안타율': sim['hit_rate'],

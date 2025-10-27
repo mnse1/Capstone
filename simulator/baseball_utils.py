@@ -25,7 +25,7 @@ def get_pitcher_stats(df, pitcher_name, year):
     ip  = row.get('이닝', None)
     so  = row.get('삼진', None)
     bb  = row.get('볼넷', None)
-    hr  = row.get('피홈런', None)
+    hr  = row.get('홈런', None)
 
     # 리그 평균(연도별) FIP* / 피안타 계산
     league_fip_star = _safe_mean(year_df.get('FIP*'))  # FIP*가 있음을 가정
@@ -47,10 +47,10 @@ def get_pitcher_stats(df, pitcher_name, year):
         if league_hits and h_player:
             adj_hits = 100 * (league_hits / (h_player + 1e-9))
 
-    # 피출루율/피장타율로 피OPS
-    obp_against = row.get('피출루율', None)
-    slg_against = row.get('피장타율', None)
-    ops_against = (obp_against + slg_against) if pd.notna(obp_against) and pd.notna(slg_against) else None
+    # # 피출루율/피장타율로 피OPS
+    # obp_against = row.get('피출루율', None)
+    # slg_against = row.get('피장타율', None)
+    # ops_against = (obp_against + slg_against) if pd.notna(obp_against) and pd.notna(slg_against) else None
 
     # Rate들
     def rate9(x):
@@ -63,7 +63,7 @@ def get_pitcher_stats(df, pitcher_name, year):
         'FIP*': row.get('FIP*', None),
         'ERA*': row.get('ERA*', None),
         'RA9*': row.get('RA9*', None),
-        '피OPS': round(ops_against, 3) if ops_against else None,
+        # '피OPS': round(ops_against, 3) if ops_against else None,
         '보정FIP': adj_fip,
         '보정피안타': adj_hits
     }
