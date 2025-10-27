@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import plotly.express as px
 from PIL import Image
+import os
 
 # --- 페이지 설정 ---
 st.set_page_config(
@@ -52,12 +51,44 @@ def load_data():
         st.error("데이터 파일을 찾을 수 없습니다. 'all_pitchers_simulation_results.csv'와 'pitchers_simulation_optimized_weights.csv' 파일이 현재 디렉토리에 있는지 확인하세요.")
         return None
 
-df = load_data()
+@st.cache_data
+def load_2025_validation_data():
+    """
+    4페이지(2025년 검증)에서만 사용할 데이터를 독립적으로 로드하고 계산합니다.
+    """
+    try:
+        base_path = os.path.dirname(__file__)
+        file_2025 = os.path.join(base_path, '졸프용 데이터베이스(2025년 추가).xlsx')
+        df = pd.read_excel(file_2025, sheet_name='투수보정')
+
+        df.columns = df.columns.str.strip()
+        df_2025 = df[df['연도'] == 2025].copy()
+        
+        # ERA=0 예외처리
+        df_2025.loc[df_2025['ERA'] == 0, 'ERA*'] = 999.0
+
+        # PAI 점수 직접 계산
+        df_2025['PAI_orig'] = 0.70 * df_2025['보정FIP'] + 0.30 * df_2025['보정피안타']
+        df_2025['PAI'] = 0.34 * df_2025['보정FIP'] + 0.66 * df_2025['보정피안타']
+        
+        return df_2025
+
+    except FileNotFoundError:
+        st.error("2025년 검증을 위한 '졸프용 데이터베이스(2025년 추가).xlsx' 파일을 찾을 수 없습니다.")
+        return None
+    except Exception as e:
+        st.error(f"2025년 데이터 처리 중 오류: {e}")
+        return None
 
 st.sidebar.title("⚾ KBO 투수 평가 대시보드")
-page = st.sidebar.radio("페이지 선택", ["프로젝트 소개", "PAI 랭킹 대시보드", "모델 성능 비교"])
+page = st.sidebar.radio("페이지 선택", ["프로젝트 소개", "PAI 랭킹 대시보드", "모델 성능 비교", "2025년 예측력 검증"])
 
 # --- 페이지별 콘텐츠 ---
+
+if page in ["프로젝트 소개", "PAI 랭킹 대시보드", "모델 성능 비교"]:
+    df = load_data()
+    if df is None:
+        st.stop()
 
 # 1. 프로젝트 소개 페이지
 if page == "프로젝트 소개":
@@ -117,7 +148,7 @@ elif page == "PAI 랭킹 대시보드":
         st.dataframe(filtered_df.sort_values(by="PAI", ascending=False).reset_index(drop=True).style.format({
             'PAI': '{:.2f}',
             'ERA*': '{:.2f}',
-            # 'PAI_orig': '{:.2f}',
+            'PAI_orig': '{:.2f}',
             'FIP*': '{:.2f}',
             'K/9': '{:.2f}',
             'BB/9': '{:.2f}',
@@ -177,3 +208,43 @@ elif page == "모델 성능 비교":
 
         except FileNotFoundError:
             st.warning("시각화 이미지 파일을 찾을 수 없습니다. 'pai_distribution_comparison.png'와 'pai_correlation_comparison.png' 파일이 현재 디렉토리에 있는지 확인하세요.")
+            
+# --- 4. 2025년 예측력 검증 페이지 ---
+elif page == "2025년 예측력 검증":
+    st.title("2025 시즌 모델 실전 예측력 검증")
+    st.markdown("과거 데이터로 학습된 두 모델이, 2025년의 실제 데이터를 얼마나 정확하게 예측했는지 최종 검증합니다.")
+    st.markdown("---")
+
+    # 독립적인 2025년 데이터 로딩 함수 호출
+    df_2025 = load_2025_validation_data()
+
+    if df_2025 is not None:
+        # 최소 이닝 30으로 필터링
+        analysis_data = df_2025[df_2025['이닝'] >= 30].copy()
+
+        st.header("1. 2025년 실제 성적(ERA*) 예측력 비교")
+        
+        if len(analysis_data) > 10:
+            # 상관계수 계산
+            corr_orig_2025 = analysis_data['PAI_orig'].corr(analysis_data['ERA*'])
+            corr_opt_2025 = analysis_data['PAI'].corr(analysis_data['ERA*'])
+            improvement_2025 = corr_opt_2025 - corr_orig_2025
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric(label="기존 모델의 2025년 예측력", value=f"{corr_orig_2025:.4f}")
+            with col2:
+                st.metric(label="신규 모델의 2025년 예측력", value=f"{corr_opt_2025:.4f}", delta=f"{improvement_2025:.4f} 개선")
+            
+            if corr_orig_2025 != 0:
+                st.success(f"**최종 결론:** 신규 모델이 기존 모델보다 **2025년 미래 데이터를 {improvement_2025/abs(corr_orig_2025):.2%} 더 정확하게 예측**했습니다!")
+        else:
+            st.warning("분석할 2025년 데이터가 부족합니다 (30이닝 이상 투수 10명 미만).")
+        
+        st.markdown("---")
+        st.header("2. 2025년 예측력 비교 시각화")
+        try:
+            img_2025 = Image.open('prediction_validation_2025.png')
+            st.image(img_2025, caption="2025년 PAI 모델별 실제 성적 예측력 비교")
+        except FileNotFoundError:
+            st.warning("'prediction_validation_2025.png' 파일을 찾을 수 없습니다. `compare_2025.py`를 먼저 실행해주세요.")
